@@ -1,0 +1,149 @@
+> to connect to server, we use a REST API that has methods
+get -> to retrieve data
+put -> to update the existing data, we need to send the entire resource representation
+post -> used to create new record
+delete -> delete a record
+patch -> just to get a part of the resource (slightly different from 'get')
+head -> used to check the existence of a resource
+
+To get the data, in angular2 we have 'Http' service so we need to import it and include that in a
+constructor to use it in our method to call the resource.
+
+The data that we get from this call to the server is an observable, it's a stripped down version
+of an actual observable, in this observable we dont have 'map' method. So we need to import that method
+again from the operators available in 'rxjs'.
+
+Here we are using 'map' to give the actual data returned to the consuming component.
+
+import {Http} from 'angular2/http';
+import 'rxjs/add/operator/map';
+
+export class DataService{
+	private url = '';
+	constructor(private _http: Http){
+
+	}
+	getData(){
+		return this._http.get('')
+			.map((res) => res.json());
+	}
+}
+
+All the methods inside of the class are by default 'public', so we are making 'url' to be private
+so that no other methods change this 'url'
+------------USAGE OF A SERVICE AFTER CREATING IT-----------------
+after creating the service, you need to make it injectable in other components, by 
+importing the 'Injectable' and adding the decorator
+
+import {Injectable} from 'angular2/core';
+
+@Injectable() //this statement here makes this service to be injected in other componets
+export class DataService{
+	.........
+}
+
+ in app.component.ts
+import {DataServie} from './post.service';
+import {HTTP_PROVIDERS} from 'angular2/core';
+
+here we are importing HTTP_PROVIDERS array so that we can ue all the methods inside it
+without re-writing 'Http' again inside of providers array.
+
+providers: [DataService, HTTP_PROVIDERS]
+
+export class appComp{
+	constructor(private _dataService: DataService){
+		this._dataService.getData()
+							.subcribe((x) => console.log(x));
+	}
+}
+
+--------------IMPORTANT---------------
+you got this error saying
+Error: XHR error (404 Not Found) loading http://localhost:3000/angular2/http
+to avoid this include proper script tag in index.html, before using 'http' from 'angular2'
+
+<script src="node_modules/angular2/bundles/http.dev.js"></script>
+
+you got this error
+DI Exception
+    at NoProviderError.BaseException [as constructor] (http://localhost:3000/node_modules/angular2/bundles/angular2.dev.js:8080:21)
+
+ because even though you included 'DataService' in providers array, you also need to include
+ HTTP_PROVIDERS, else you will get the above error
+ -------------
+ here we wrote the get request inside of the constructor
+ but its not a good practice to write it inside of it.
+
+ To avoid that we have lifecycle hooks in anglar2
+ we can specify this call in 'OnInit'
+ import {OnInit} from 'angular2/core';
+
+ export class AppComp implements OnInit{
+ 	constructor(_dataService:DataService){
+ 		this._dataService.postData(post)
+ 							.subscribe((x) => console.log(x));
+ 	}
+ 	ngOnInit(){
+ 		this._dataService.getData()
+ 						.subscribe((x) => console.log(x));
+ 	}
+
+ }
+
+ while using post here the type of 'post' argument is not recongnized.
+ By default in typescript, if we dont specify the type of any varibale or argument
+ it will be of type any, so to avoid that, we can definet he type of post being passed
+ by declaring a seperate class.
+
+ in post.ts
+ export class Post{
+ 	userId: number;
+ 	title: string;
+ 	body: string;
+ } //when we do class to define type, when it is converted to javascript
+ its an IIFE and its a lengthy code.
+
+ BUT when we do an interface
+ export Interface Post{
+ 	userId: number;
+ 	title: string;
+ 	body: string;
+ }//when we do this, if we observe the .js mapped file we cant see the IIFe now and the lengthy code
+ is vanished.
+
+ Now we can specify the type of 'post' argument passed to postData service as type 'Post'
+ 	in the service
+ 		postData(postObj: Post){
+ 			//.....
+ 		}
+also when we use the getData, when we console log the data arrays' first object, we dont
+get ny intellisense because the type is if type 'any'
+to avid that we can declare the type of the Observable returned by getData function in the service
+	getData(): Observable<Post[]>{
+
+	}
+
+CONVERTING AN Observable to Promise
+
+Before
+getData(): Observable<Post[]>{
+	//.....
+}	
+
+After
+getData(): Promise<Post[]>{
+	this._http.get('')
+				.map(x => res.json())
+				.toPromise(); //since the above Observable returned through map
+				is a stripped down version, again we need to import the 'toPromise'
+				operator and re-write the dataType as 'Promise'
+}
+
+Since here we are converting the Observable to Promise, in the appComponent, we wont be able to use
+'subscribe', instead we need to use 'then' method
+
+LIFECYCLE HOOKS
+REFER https://angular-2-training-book.rangle.io/handout/advanced-components/component_lifecycle.html
+http://stackoverflow.com/questions/41579709/how-to-implement-multiple-lifecycle-hooks-for-an-angular2-component
+to implement more than one life cycle hooks

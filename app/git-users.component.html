@@ -1,0 +1,32 @@
+<form #f="ngForm" (ngSubmit)="getUserData(f)">
+    <input 
+    	ngControl="enteredUser" 
+    	#enteredUser="ngForm" 
+    	id="search" type="text" 
+    	class="form-control">
+    <button class="btn btn-primary">get users</button>
+</form>
+
+<div class="media">
+  <div class="media-left">
+  	<h1 *ngIf="user?.user?.login">@{{user.user.login}}</h1>
+    <a href="#" *ngIf="user?.user?.avatar_url">
+      <img class="avatar media-object" src="{{user.user.avatar_url}}" alt="avatar">
+    </a>
+  </div>
+</div>
+<i *ngIf="loadingUsers" class="fa fa-spinner fa-5x followers"></i>
+<div *ngIf="user?.followers">
+	<h1>Followers</h1>
+	<div class="media" *ngFor="#follower of user.followers">
+	  <div class="media-left">
+	    <a href="#">
+	      <img class="avatar media-object" src="{{follower.avatar_url}}" alt="avatar">
+	    </a>
+	  </div>
+	  <div class="media-body">
+	    <h4 class="media-heading">@{{follower.login}}</h4>
+	    
+	  </div>
+	</div>
+</div>
